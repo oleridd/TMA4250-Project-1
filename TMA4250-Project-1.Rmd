@@ -24,7 +24,46 @@ library(MASS)
 # Problem 1
 
 ## a)
+```{r 1b1}
+library(bessel)
 
+
+alpha = c(1,1.9)
+a1 = 10
+h <- seq(0, 50, by=0.1)
+# Power Exponential with power alpha=1 and spatial scale a=10
+corr_funcexp1 <- function(h) {
+  exp(-(h/a1)^(alpha[1]))
+}
+
+# Power Exponential with power alpha=1.9 and spatial scale a=10
+corr_funcexp2 <- function(h) {
+  exp(-(h/a1)^(alpha[2]))
+}
+
+nu = c(1,3)
+a2 = 20
+
+Mattern <- function(h, nu, a2) {
+  (2^(1-nu) / gamma(nu)) * ((h*sqrt(8*nu))/a2)^nu * besselK(sqrt(8*nu)*h/a2, nu)
+}
+
+#Mattern with smoothness nu=1
+corr_funcmatern1 = Mattern(h, nu[1], a2)
+
+#Mattern with smoothness nu=3
+corr_funcmatern2 = Mattern(h, nu[2], a2)
+
+# Plot the functions
+plot(h, corr_funcexp1(h), type="l", lwd=2, col="red", xlab="h", ylab="ρ(h)")
+lines(h, corr_funcexp2(h), lwd=2, col="blue")
+lines(h, corr_funcmatern1, type="l", lwd=2, col="green")
+lines(h, corr_funcmatern2, type="l", lwd=2, col="purple")
+
+legend("topright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "Mattern (ν=1, a=10)", "Mattern (ν=3, a=10)"),
+       col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
+
+```
 ## b)
 ```{r 1b1}
 matern_modified <- function(h, nu, a) {
