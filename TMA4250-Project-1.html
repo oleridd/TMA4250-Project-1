@@ -364,26 +364,58 @@ display: none;
 </div>
 <div id="b" class="section level2">
 <h2>b)</h2>
-<pre class="r"><code>matern_modified &lt;- function(h, nu, a) {
-  # Matern function as defined in lectures (based on matern from geoR)
+<pre class="r"><code>powered_exponential &lt;- function(h, a, alpha) {
+  # Powered exponential correlation function as defined in lectures
+  return(
+    exp(-(h/a)^alpha)
+  )
+}
+
+matern_modified &lt;- function(h, a, nu) {
+  # Matern correlation function as defined in lectures (based on matern from geoR)
   phi &lt;- a/sqrt(8*nu)
   return(
     matern(h, phi, nu)
   )
-}
-
-s &lt;- c(1:50)
+}</code></pre>
+<p>Defining parameters that are constant for the different cases:</p>
+<pre class="r"><code>s &lt;- c(1:50)
 N &lt;- 4
-nu &lt;- 2
-a &lt;- 10
-variance &lt;- 2.5
-
+variance &lt;- c(1, 5)
 
 dist_matrix &lt;- as.matrix(dist(s, diag=TRUE, upper=TRUE))
-mu &lt;- rep(0, length(s))
-Sigma &lt;- variance*matern_modified(dist_matrix, nu, a)
+mu &lt;- rep(0, length(s))</code></pre>
+<p>Loop for powered exponential correlation function:</p>
+<pre class="r"><code>alpha_values &lt;- c(1, 1.9)
+exp_a &lt;- 10
+exp_realizations &lt;- list()
 
-x &lt;- mvrnorm(n=N, mu, Sigma)</code></pre>
+for (var in variance) {
+  for (alpha in alpha_values) {
+    Sigma &lt;- var*powered_exponential(dist_matrix, exp_a, alpha)
+    # A trick for appending matrices to lists:
+    exp_realizations &lt;- unlist(list(
+      exp_realizations,
+      list(mvrnorm(n=N, mu, Sigma))
+    ), recursive=FALSE)
+  }
+}</code></pre>
+<p>Loop for matern correlation functions:</p>
+<pre class="r"><code>nu_values &lt;- c(1, 3)
+matern_a &lt;- 20
+matern_realizations &lt;- list()
+
+for (var in variance) {
+  for (nu in nu_values) {
+    Sigma &lt;- var*matern_modified(dist_matrix, matern_a, nu)
+    matern_realizations &lt;- unlist(list(
+      matern_realizations,
+      list(mvrnorm(n=N, mu, Sigma))
+    ), recursive=FALSE)
+  }
+}</code></pre>
+<p>Plot:</p>
+<pre class="r"><code>plot_1 &lt;- ggplot(mpg) + geom_point(aes(x=s, y=exp_realizations[1]))</code></pre>
 </div>
 <div id="c" class="section level2">
 <h2>c)</h2>
