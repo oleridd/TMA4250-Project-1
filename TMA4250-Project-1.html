@@ -364,6 +364,26 @@ display: none;
 </div>
 <div id="b" class="section level2">
 <h2>b)</h2>
+<pre class="r"><code>matern_modified &lt;- function(h, nu, a) {
+  # Matern function as defined in lectures (based on matern from geoR)
+  phi &lt;- a/sqrt(8*nu)
+  return(
+    matern(h, phi, nu)
+  )
+}
+
+s &lt;- c(1:50)
+N &lt;- 4
+nu &lt;- 2
+a &lt;- 10
+variance &lt;- 2.5
+
+
+dist_matrix &lt;- as.matrix(dist(s, diag=TRUE, upper=TRUE))
+mu &lt;- rep(0, length(s))
+Sigma &lt;- variance*matern_modified(dist_matrix, nu, a)
+
+x &lt;- mvrnorm(n=N, mu, Sigma)</code></pre>
 </div>
 <div id="c" class="section level2">
 <h2>c)</h2>
