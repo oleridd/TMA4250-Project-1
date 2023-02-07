@@ -19,15 +19,13 @@ library(akima)
 library(fields)
 library(ggplot2)
 library(MASS)
+library(bessel)
 ```
 
 # Problem 1
 
 ## a)
 ```{r 1b1}
-library(bessel)
-
-
 alpha = c(1,1.9)
 a1 = 10
 h <- seq(0, 50, by=0.1)
@@ -61,6 +59,46 @@ lines(h, corr_funcmatern1, type="l", lwd=2, col="green")
 lines(h, corr_funcmatern2, type="l", lwd=2, col="purple")
 
 legend("topright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "Mattern (ν=1, a=10)", "Mattern (ν=3, a=10)"),
+       col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
+
+#Variance= 1
+var1 = 1
+#Semi-variogram function for the Power Exponential with power alpha=1 and spatial scale a=10
+semivariogram_funcexp1 = var1*(1-corr_funcexp1(h))
+#Semi-variogram function for the Power Exponential with power alpha=1.9 and spatial scale a=10
+semivariogram_funcexp2 = var1*(1-corr_funcexp2(h))
+#Semi-variogram function for #Mattern with smoothness nu=1
+semivariogram_corr_funcmatern1 = var1*(1-corr_funcmatern1)
+#Semi-variogram function for #Mattern with smoothness nu=3
+semivariogram_corr_funcmatern2 = var1*(1-corr_funcmatern2)
+
+# Plot the semivariograms for varians= 1
+plot(h, semivariogram_funcexp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")
+lines(h, semivariogram_funcexp2, lwd=2, col="blue")
+lines(h, semivariogram_corr_funcmatern1, type="l", lwd=2, col="green")
+lines(h, semivariogram_corr_funcmatern2, type="l", lwd=2, col="purple")
+
+legend("bottomright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "Mattern (ν=1, a=10)", "Mattern (ν=3, a=10)"),
+       col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
+
+#Variance= 3
+var2 = 3
+#Semi-variogram function for the Power Exponential with power alpha=1 and spatial scale a=10
+semivariogram_exp1 = var2*(1-corr_funcexp1(h))
+#Semi-variogram function for the Power Exponential with power alpha=1.9 and spatial scale a=10
+semivariogram_exp2 = var2*(1-corr_funcexp2(h))
+#Semi-variogram function for #Mattern with smoothness nu=1
+semivariogram_corr_matern1 = var2*(1-corr_funcmatern1)
+#Semi-variogram function for #Mattern with smoothness nu=3
+semivariogram_corr_matern2 = var2*(1-corr_funcmatern2)
+
+# Plot the semivariograms for varians= 1
+plot(h, semivariogram_exp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")
+lines(h, semivariogram_exp2, lwd=2, col="blue")
+lines(h, semivariogram_corr_matern1, type="l", lwd=2, col="green")
+lines(h, semivariogram_corr_matern2, type="l", lwd=2, col="purple")
+
+legend("bottomright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "Mattern (ν=1, a=10)", "Mattern (ν=3, a=10)"),
        col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
 
 ```
