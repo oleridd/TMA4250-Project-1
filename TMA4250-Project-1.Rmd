@@ -5,26 +5,86 @@ date: "2023-02-07"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# install.packages("geoR")
+# install.packages("akima")
+# install.packages("fields")
+# install.packages("ggplot2")
+# install.packages("MASS")
+
+library(geoR)
+library(akima)
+library(fields)
+library(ggplot2)
+library(MASS)
 ```
 
-## R Markdown
+# Problem 1
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## a)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## b)
+```{r 1b1}
+matern_modified <- function(h, nu, a) {
+  # Matern function as defined in lectures (based on matern from geoR)
+  phi <- a/sqrt(8*nu)
+  return(
+    matern(h, phi, nu)
+  )
+}
 
-```{r cars}
-summary(cars)
+s <- c(1:50)
+N <- 4
+nu <- 2
+a <- 10
+variance <- 2.5
+
+
+dist_matrix <- as.matrix(dist(s, diag=TRUE, upper=TRUE))
+mu <- rep(0, length(s))
+Sigma <- variance*matern_modified(dist_matrix, nu, a)
+
+x <- mvrnorm(n=N, mu, Sigma)
 ```
 
-## Including Plots
+## c)
 
-You can also embed plots, for example:
+## d)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+## e)
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## f)
+
+## g)
+
+
+# Problem 2
+
+## a)
+
+## b)
+
+## c)
+
+## d)
+
+## e)
+
+## f)
+
+
+# Problem 3
+
+## a)
+
+## b)
+
+## c)
+
+## d)
+
+## e)
+
+## f)
