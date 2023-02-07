@@ -53,7 +53,7 @@ corr_funcmatern1 = Mattern(h, nu[1], a2)
 corr_funcmatern2 = Mattern(h, nu[2], a2)
 
 # Plot the functions
-plot(h, corr_funcexp1(h), type="l", lwd=2, col="red", xlab="h", ylab="ρ(h)")
+plot(h, corr_funcexp1(h), type="l", lwd=2, col="red", xlab="h", ylab="ρ(h)")+title("Spatial correlation functions")
 lines(h, corr_funcexp2(h), lwd=2, col="blue")
 lines(h, corr_funcmatern1, type="l", lwd=2, col="green")
 lines(h, corr_funcmatern2, type="l", lwd=2, col="purple")
@@ -73,7 +73,7 @@ semivariogram_corr_funcmatern1 = var1*(1-corr_funcmatern1)
 semivariogram_corr_funcmatern2 = var1*(1-corr_funcmatern2)
 
 # Plot the semivariograms for varians= 1
-plot(h, semivariogram_funcexp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")
+plot(h, semivariogram_funcexp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")+title("semi-variogram for var=1")
 lines(h, semivariogram_funcexp2, lwd=2, col="blue")
 lines(h, semivariogram_corr_funcmatern1, type="l", lwd=2, col="green")
 lines(h, semivariogram_corr_funcmatern2, type="l", lwd=2, col="purple")
@@ -93,7 +93,7 @@ semivariogram_corr_matern1 = var2*(1-corr_funcmatern1)
 semivariogram_corr_matern2 = var2*(1-corr_funcmatern2)
 
 # Plot the semivariograms for varians= 1
-plot(h, semivariogram_exp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")
+plot(h, semivariogram_exp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")+title("semi-variogram for var=3")
 lines(h, semivariogram_exp2, lwd=2, col="blue")
 lines(h, semivariogram_corr_matern1, type="l", lwd=2, col="green")
 lines(h, semivariogram_corr_matern2, type="l", lwd=2, col="purple")
