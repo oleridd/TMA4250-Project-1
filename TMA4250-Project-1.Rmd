@@ -56,6 +56,10 @@ mu <- rep(0, length(s))
 
 Loop for powered exponential correlation function:
 ```{r 1b2}
+par(mfrow=c(2, 4))
+x11(width=20, height=4)
+colors <- c("darkred", "darkblue", "darkgreen", "darkmagenta")
+
 alpha <- c(1, 1.9)
 exp_a <- 10
 exp_realizations <- array(rep(0, prod(array_dims)), array_dims)
@@ -65,16 +69,41 @@ for (i in seq_along(variance)) {
     Sigma <- variance[i]*powered_exponential(dist_matrix, exp_a, alpha[j])
     flattened_index <- 2*(i-1)%%2 + j
     exp_realizations[flattened_index, , ] <- as.array(mvrnorm(n=N, mu, Sigma))
+    plot(s, exp_realizations[flattened_index, 1, ], type="lines", col=colors[1], ylab="X (simulated)", cex=0.2,
+         main=paste("Exp with variance ", variance[i], " and alpha "))
+    for (k in 2:N) {
+      lines(s, exp_realizations[flattened_index, k, ], col=colors[k])
+    }
+  }
+}
+
+
+nu_values <- c(1, 3)
+matern_a <- 10
+matern_realizations <- array(rep(0, prod(array_dims)), array_dims)
+
+for (i in seq_along(variance)) {
+  for (j in seq_along(nu_values)) {
+    Sigma <- variance[i]*matern(dist_matrix, matern_a, nu_values[j])
+    flattened_index <- 2*(i-1)%%2 + j
+    matern_realizations[flattened_index, , ] <- as.array(mvrnorm(n=N, mu, Sigma))
+    plot(s, matern_realizations[flattened_index, 1, ], type="lines", col=colors[1], ylab="X (simulated)",
+         main=paste("Matern with variance", variance[i], " and nu ", nu_values[j]))
+    for (k in 2:N) {
+      lines(s, matern_realizations[flattened_index, k, ], col=colors[k])
+    }
   }
 }
 ```
 
 Loop for matern correlation functions:
 ```{r 1b3}
-nu_values <- c(1, 3)
-matern_a <- 10
-matern_realizations <- array(rep(0, prod(array_dims)), array_dims)
 
+```
+
+Plot:
+```{r 1b4}
+par(mfrow=c(2, 4))
 for (i in seq_along(variance)) {
   for (j in seq_along(alpha)) {
     Sigma <- variance[i]*powered_exponential(dist_matrix, exp_a, alpha[j])
@@ -82,11 +111,6 @@ for (i in seq_along(variance)) {
     matern_realizations[flattened_index, , ] <- as.array(mvrnorm(n=N, mu, Sigma))
   }
 }
-```
-
-Plot:
-```{r 1b4}
-
 ```
 
 ## c)
