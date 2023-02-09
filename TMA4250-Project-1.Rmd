@@ -20,6 +20,8 @@ library(fields)
 library(ggplot2)
 library(MASS)
 library(bessel)
+library(ggplot2)
+library(plotrix)
 ```
 
 # Problem 1
@@ -140,6 +142,28 @@ x <- mvrnorm(n=N, mu, Sigma)
 # Problem 2
 
 ## a)
+```{r 1b1}
+#Read the data from topo.dat file
+data <- read.table("/Users/olekristianskogly/Documents/Romlig stat/topo.dat", sep = " ", header = TRUE)
+ggplot (data, aes(x, y, color = z)) + geom_point()
+
+# Interpolate the data
+interp_obj <- interp(data$x, data$y, data$z)
+
+# Plot the interpolated data with color bar
+image.plot(interp_obj, main = "Interpolated Elevation", xlab = "x", ylab = "y")
+
+
+
+interp_obj <- interp(data$x, data$y, data$z)
+
+# Plot the heatmap
+image(interp_obj, xlab = "x", ylab = "y", col = colorRampPalette(c("blue", "white", "red"))(30), 
+      useRaster = TRUE)
+
+# Add a contour plot on top of the heatmap
+contour(interp_obj, add = TRUE, drawlabels = TRUE)
+```
 
 ## b)
 
