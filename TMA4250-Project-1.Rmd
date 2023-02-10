@@ -26,6 +26,7 @@ library(MASS)
 library(reshape2)
 library(patchwork)
 library(glue)
+library(tidyverse)
 ```
 
 # Problem 1
@@ -61,6 +62,21 @@ dist_matrix <- as.matrix(dist(s, diag=TRUE, upper=TRUE))
 mu <- rep(0, length(s))
 ```
 
+Defining a function to plot the resulting 3D-array:
+```{r 1b2_plot_fnc}
+plot_realizations <- function(realizations) {
+  
+  plot <- do.call(wrap_plots, lapply(1:4, function(i) { # Using patchwork to create subplots using `wrap_plots`
+    df <- realizations %>% melt %>% filter(Var1 == i)   # Converts the 3D array into a dataframe and filters on i
+    ggplot(df) + geom_line(aes(Var3, value, group=Var2, color=factor(Var2))) +
+      xlab("s") +labs(title=glue("Case {i}"), color="")
+  }))
+  
+  return(plot)
+}
+```
+
+
 Loop for powered exponential correlation function:
 ```{r 1b2_sim}
 alpha <- c(1, 1.9)
@@ -74,18 +90,10 @@ for (i in seq_along(variance)) {
     exp_realizations[flattened_index, , ] <- as.array(mvrnorm(n=N, mu, Sigma))
   }
 }
-
-melted_exp_realizations <- melt(exp_realizations) # Converts the 3D array into a dataframe
 ```
 
 ```{r 1b2_plot}
-do.call(wrap_plots, lapply(1:4, function(i) {
-  df <- subset(melted_exp_realizations, (Var1 == i))
-  ggplot(df) + geom_line(aes(Var3, value, group=Var2, color=factor(Var2))) +
-    xlab("s") +labs(title=glue("Case {i}"), color="")
-})) -> plot
-
-plot
+plot_realizations(exp_realizations)
 ```
 
 
@@ -102,19 +110,10 @@ for (i in seq_along(variance)) {
     matern_realizations[flattened_index, , ] <- as.array(mvrnorm(n=N, mu, Sigma))
   }
 }
-
-melted_matern_realizations <- melt(matern_realizations)
 ```
 
-Plot:
-```{r 1b4_plot}
-do.call(wrap_plots, lapply(1:4, function(i) {
-  df <- subset(melted_matern_realizations, (Var1 == i))
-  ggplot(df) + geom_line(aes(Var3, value, group=Var2, color=factor(Var2))) +
-    xlab("s") + labs(title=glue("Case {i}"), color="")
-})) -> plot
-
-plot
+```{r 1b3_plot}
+plot_realizations(matern_realizations)
 ```
 
 ## c)
