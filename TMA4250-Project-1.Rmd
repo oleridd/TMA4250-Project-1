@@ -7,7 +7,6 @@ output: html_document
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-set.seed(42)
 
 # install.packages("geoR")
 # install.packages("akima")
@@ -17,6 +16,8 @@ set.seed(42)
 # install.packages("reshape2")
 # install.packages("patchwork")
 # install.packages("glue")
+# install.packages("tidyverse")
+# install.packages("latex2exp)
 
 library(geoR)
 library(akima)
@@ -27,6 +28,9 @@ library(reshape2)
 library(patchwork)
 library(glue)
 library(tidyverse)
+library(latex2exp)
+
+set.seed(42)
 ```
 
 # Problem 1
@@ -69,7 +73,7 @@ plot_realizations <- function(realizations) {
   plot <- do.call(wrap_plots, lapply(1:4, function(i) { # Using patchwork to create subplots using `wrap_plots`
     df <- realizations %>% melt %>% filter(Var1 == i)   # Converts the 3D array into a dataframe and filters on i
     ggplot(df) + geom_line(aes(Var3, value, group=Var2, color=factor(Var2))) +
-      xlab("s") +labs(title=glue("Case {i}"), color="")
+      xlab("s") + labs(title=glue("Case {i}"), color="")
   }))
   
   return(plot)
@@ -125,18 +129,52 @@ sigma_N <- c(0, 0.25)
 Sigma_star <- Sigma[1:3, ]
 Sigma_bar <- Sigma_star[, 1:3]
 
-cond_sim <- matrix(0, nrow=2, ncol=50)
+array_dims <- c(50, 4)
+cond_sim <- array(rep(0, prod(array_dims)), array_dims)
 for (i in seq_along(sigma_N)) {
   y <- as.vector(mvrnorm(n=1, rep(0, 3), Sigma[1:3, 1:3] + sigma_N[i]*identity(3)))
   inv_mat <- solve(Sigma_bar + sigma_N[i]*identity(3))
   cond_mu <-  t(Sigma_star) %*% inv_mat %*% y
   cond_Sigma <- Sigma - t(Sigma_star) %*% inv_mat %*% Sigma_star
-  cond_sim[i] <- rmvnorm(n=1, cond_mu, cond_Sigma)
+  cond_sim[, i] <- mvrnorm(n=1, cond_mu, cond_Sigma)
+  cond_sim[, i+2] <- diag(cond_Sigma)
 }
-
-cond_sim
 ```
+
+Creating a dataframe:
+```{r 1d2}
+z <- 1.64 # z-value for a confidence interval of level 0.10
+
+cond_sim <- as.data.frame(cond_sim)
+colnames(cond_sim) <- c("Rel1", "Rel2", "Rel1_95", "Rel2_95")
+cond_sim$s <- s
+cond_sim$Rel1_95 <- sqrt(cond_sim$Rel1_95)*z
+cond_sim$Rel2_95 <- sqrt(cond_sim$Rel2_95)*z
+head(cond_sim)
+```
+
+
+Plotting:
+```{r 1d3}
+p1 <- ggplot(cond_sim) +
+  geom_line(aes(s, Rel1)) +
+  geom_ribbon(aes(x=s, ymin=Rel1-Rel1_95, ymax=Rel1+Rel1_95), alpha=0.25) +
+  ylab("Realization 1") + labs(title=TeX(glue("$\\sigma_N^2 = {sigma_N[1]}$")))
+
+p2 <- ggplot(cond_sim) +
+  geom_line(aes(s, Rel2)) + 
+  geom_ribbon(aes(x=s, ymin=Rel2-Rel2_95, ymax=Rel2+Rel2_95), alpha=0.25) +
+  ylab("Realization 2") + labs(title=TeX(glue("$\\sigma_N^2 = {sigma_N[2]}$")))
+
+p1 + p2
+```
+Questions: How do I add a legend to this plot? How do I make the plots wider?
+
 ## e)
+```{r 1e1}
+
+```
+
 
 ## f)
 
