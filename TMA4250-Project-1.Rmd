@@ -123,12 +123,14 @@ plot_realizations(matern_realizations)
 Sigma <- variance[2]*matern(dist_matrix, matern_a, nu_values[2])
 sigma_N <- c(0, 0.25)
 Sigma_star <- Sigma[1:3, ]
+Sigma_bar <- Sigma_star[, 1:3]
 
 cond_sim <- matrix(0, nrow=2, ncol=50)
 for (i in seq_along(sigma_N)) {
   y <- as.vector(mvrnorm(n=1, rep(0, 3), Sigma[1:3, 1:3] + sigma_N[i]*identity(3)))
-  cond_mu <- sigma_N[i] * t(Sigma_star) %*% y
-  cond_Sigma <- Sigma - sigma_N[i] * t(Sigma_star) %*% Sigma_star
+  inv_mat <- solve(Sigma_bar + sigma_N[i]*identity(3))
+  cond_mu <-  t(Sigma_star) %*% inv_mat %*% y
+  cond_Sigma <- Sigma - t(Sigma_star) %*% inv_mat %*% Sigma_star
   cond_sim[i] <- rmvnorm(n=1, cond_mu, cond_Sigma)
 }
 
