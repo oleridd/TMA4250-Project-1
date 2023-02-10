@@ -7,18 +7,25 @@ output: html_document
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+set.seed(42)
 
 # install.packages("geoR")
 # install.packages("akima")
 # install.packages("fields")
 # install.packages("ggplot2")
 # install.packages("MASS")
+# install.packages("reshape2")
+# install.packages("patchwork")
+# install.packages("glue")
 
 library(geoR)
 library(akima)
 library(fields)
 library(ggplot2)
 library(MASS)
+library(reshape2)
+library(patchwork)
+library(glue)
 ```
 
 # Problem 1
@@ -55,11 +62,7 @@ mu <- rep(0, length(s))
 ```
 
 Loop for powered exponential correlation function:
-```{r 1b2}
-par(mfrow=c(2, 4))
-x11(width=20, height=4)
-colors <- c("darkred", "darkblue", "darkgreen", "darkmagenta")
-
+```{r 1b2_sim}
 alpha <- c(1, 1.9)
 exp_a <- 10
 exp_realizations <- array(rep(0, prod(array_dims)), array_dims)
@@ -69,15 +72,25 @@ for (i in seq_along(variance)) {
     Sigma <- variance[i]*powered_exponential(dist_matrix, exp_a, alpha[j])
     flattened_index <- 2*(i-1)%%2 + j
     exp_realizations[flattened_index, , ] <- as.array(mvrnorm(n=N, mu, Sigma))
-    plot(s, exp_realizations[flattened_index, 1, ], type="lines", col=colors[1], ylab="X (simulated)", cex=0.2,
-         main=paste("Exp with variance ", variance[i], " and alpha "))
-    for (k in 2:N) {
-      lines(s, exp_realizations[flattened_index, k, ], col=colors[k])
-    }
   }
 }
 
+melted_exp_realizations <- melt(exp_realizations) # Converts the 3D array into a dataframe
+```
 
+```{r 1b2_plot}
+do.call(wrap_plots, lapply(1:4, function(i) {
+  df <- subset(melted_exp_realizations, (Var1 == i))
+  ggplot(df) + geom_line(aes(Var3, value, group=Var2, color=factor(Var2))) +
+    xlab("s") +labs(title=glue("Case {i}"), color="")
+})) -> plot
+
+plot
+```
+
+
+Loop for matern correlation functions:
+```{r 1b3_sim}
 nu_values <- c(1, 3)
 matern_a <- 10
 matern_realizations <- array(rep(0, prod(array_dims)), array_dims)
@@ -87,36 +100,41 @@ for (i in seq_along(variance)) {
     Sigma <- variance[i]*matern(dist_matrix, matern_a, nu_values[j])
     flattened_index <- 2*(i-1)%%2 + j
     matern_realizations[flattened_index, , ] <- as.array(mvrnorm(n=N, mu, Sigma))
-    plot(s, matern_realizations[flattened_index, 1, ], type="lines", col=colors[1], ylab="X (simulated)",
-         main=paste("Matern with variance", variance[i], " and nu ", nu_values[j]))
-    for (k in 2:N) {
-      lines(s, matern_realizations[flattened_index, k, ], col=colors[k])
-    }
   }
 }
-```
 
-Loop for matern correlation functions:
-```{r 1b3}
-
+melted_matern_realizations <- melt(matern_realizations)
 ```
 
 Plot:
-```{r 1b4}
-par(mfrow=c(2, 4))
-for (i in seq_along(variance)) {
-  for (j in seq_along(alpha)) {
-    Sigma <- variance[i]*powered_exponential(dist_matrix, exp_a, alpha[j])
-    flattened_index <- 2*(i-1)%%2 + j
-    matern_realizations[flattened_index, , ] <- as.array(mvrnorm(n=N, mu, Sigma))
-  }
-}
+```{r 1b4_plot}
+do.call(wrap_plots, lapply(1:4, function(i) {
+  df <- subset(melted_matern_realizations, (Var1 == i))
+  ggplot(df) + geom_line(aes(Var3, value, group=Var2, color=factor(Var2))) +
+    xlab("s") + labs(title=glue("Case {i}"), color="")
+})) -> plot
+
+plot
 ```
 
 ## c)
 
 ## d)
+```{r 1d1}
+Sigma <- variance[2]*matern(dist_matrix, matern_a, nu_values[2])
+sigma_N <- c(0, 0.25)
+Sigma_star <- Sigma[1:3, ]
 
+cond_sim <- matrix(0, nrow=2, ncol=50)
+for (i in seq_along(sigma_N)) {
+  y <- as.vector(mvrnorm(n=1, rep(0, 3), Sigma[1:3, 1:3] + sigma_N[i]*identity(3)))
+  cond_mu <- sigma_N[i] * t(Sigma_star) %*% y
+  cond_Sigma <- Sigma - sigma_N[i] * t(Sigma_star) %*% Sigma_star
+  cond_sim[i] <- rmvnorm(n=1, cond_mu, cond_Sigma)
+}
+
+cond_sim
+```
 ## e)
 
 ## f)
