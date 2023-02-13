@@ -179,7 +179,32 @@ contour(interp_obj, add = TRUE, drawlabels = TRUE)
 # Problem 3
 
 ## a)
+```{r 1b1}
+# Set the parameters
+n <- 30
+var <- 2
+a <- 3
 
+# Generate the grid
+x <- 1:n
+y <- 1:n
+grid <- expand.grid(x, y)
+
+# Compute the pairwise distances
+distances <- as.matrix(dist(grid))
+
+# Compute the covariance matrix
+C <- var * exp(-distances/a)
+
+# Draw one realization of the Gaussian Random Field
+X <- rmvnorm(n=1, mean=rep(0, n^2), sigma=C)
+
+# Reshape X into a n x n matrix
+X <- matrix(X, ncol=n)
+
+# Plot the Gaussian Random Field
+image(x, y, X, col=terrain.colors(100), main="One realization of GRF")
+```
 ## b)
 
 ## c)
