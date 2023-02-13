@@ -197,13 +197,24 @@ distances <- as.matrix(dist(grid))
 C <- var * exp(-distances/a)
 
 # Draw one realization of the Gaussian Random Field
-X <- rmvnorm(n=1, mean=rep(0, n^2), sigma=C)
+X <- mvrnorm(n=1, mu=rep(0, n^2), Sigma=C)
 
 # Reshape X into a n x n matrix
 X <- matrix(X, ncol=n)
 
+# Melt the data into a data frame
+data_df <- melt(X)
+
+
 # Plot the Gaussian Random Field
-image(x, y, X, col=terrain.colors(100), main="One realization of GRF")
+ggplot(data_df, aes(Var1, Var2, fill=value)) +
+  geom_tile() +
+  scale_fill_gradientn(colours = terrain.colors(100)) +
+  stat_contour(aes(z=value), color="black") +
+  ggtitle("One realization of GRF") +
+  xlab("X") +
+  ylab("Y") +
+  theme_classic()
 ```
 ## b)
 
