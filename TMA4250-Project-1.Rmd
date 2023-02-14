@@ -4,9 +4,8 @@ author: "Ole Riddervold, Ole Kristian Skogly"
 date: "2023-02-07"
 output: html_document
 ---
-
 ```{r setup, include=FALSE, echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 
 # install.packages("geoR")
 # install.packages("akima")
@@ -17,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("patchwork")
 # install.packages("glue")
 # install.packages("tidyverse")
-# install.packages("latex2exp)
+# install.packages("latex2exp")
 
 library(geoR)
 library(akima)
@@ -29,8 +28,6 @@ library(patchwork)
 library(glue)
 library(tidyverse)
 library(latex2exp)
-
-set.seed(42)
 ```
 
 # Problem 1
@@ -174,7 +171,7 @@ Sigma_bar <- Sigma_star[, 1:3]
 array_dims <- c(50, 4)
 cond_sim <- array(rep(0, prod(array_dims)), array_dims)
 for (i in seq_along(sigma_N)) {
-  y <- as.vector(mvrnorm(n=1, rep(0, 3), Sigma[1:3, 1:3] + sigma_N[i]*identity(3)))
+  y <- as.vector(mvrnorm(n=1, rep(0, 3), Sigma_bar + sigma_N[i]*identity(3)))
   inv_mat <- solve(Sigma_bar + sigma_N[i]*identity(3))
   cond_mu <-  t(Sigma_star) %*% inv_mat %*% y
   cond_Sigma <- Sigma - t(Sigma_star) %*% inv_mat %*% Sigma_star
@@ -219,7 +216,7 @@ Simulation:
 estimate_cond_realization <- function(sigma_N, n) {
   # Given some nugget variance, simulates conditional distribution of X
   # on the given grid with observation y = (y_1, y_2, y_3).
-  y <- as.vector(mvrnorm(n=1, rep(0, 3), Sigma[1:3, 1:3] + sigma_N*identity(3)))
+  y <- as.vector(mvrnorm(n=1, rep(0, 3), Sigma_bar + sigma_N*identity(3)))
   inv_mat <- solve(Sigma_bar + sigma_N*identity(3))
   cond_mu <-  t(Sigma_star) %*% inv_mat %*% y
   cond_Sigma <- Sigma - t(Sigma_star) %*% inv_mat %*% Sigma_star
@@ -229,7 +226,7 @@ estimate_cond_realization <- function(sigma_N, n) {
 array_dims <- c(2, 50, 100)
 cond_sim <- array(rep(0, prod(array_dims)), array_dims)
 for (i in seq_along(sigma_N)) {
-  cond_sim[i, ,] <- estimate_cond_realization(sigma_N=sigma_N[i], n=100)
+  cond_sim[i, ,] <- estimate_cond_realization(sigma_N[i], n=100)
 }
 ```
 Note: This also holds for any other choice of locations, but using the first three makes indexing easier.
@@ -239,25 +236,84 @@ Estimation:
 melted_cond_sim <- cond_sim %>%
   melt() %>%
   group_by(Var1, Var2) %>%
-  summarize(mean_est=mean(value), CI90_est=1.64*sd(value)/10) %>%
+  mutate(mean_est=mean(value), CI90_est=1.64*sqrt(1+var(value))/10) %>%
   nest(-Var1)
 
 head(melted_cond_sim$data[1])
 ```
 ```{r 1e3}
-p1 <- as.data.frame(melted_cond_sim$data[1]) %>%
-  ggplot() + geom_line(aes(x=Var2, y=mean_est)) +
-  geom_ribbon(aes(x=s, ymin=mean_est-CI90_est, ymax=mean_est+CI90_est), alpha=0.25)
+p1 <- as.data.frame(melted_cond_sim$data[1]) %>% ggplot() +
+  geom_line(aes(x=Var2, y=value, group=Var3, color=factor(Var3))) +
+  geom_line(aes(x=Var2, y=mean_est)) +
+  geom_ribbon(aes(x=Var2, ymin=mean_est-CI90_est, ymax=mean_est+CI90_est), alpha=0.25) +
+  xlab("s") + ylab("Relizations") +
+  labs(title=TeX(glue("$\\sigma_N^2 = {sigma_N[1]}$"))) +
+  theme(legend.position="none")
 
-p2 <- as.data.frame(melted_cond_sim$data[2]) %>%
-  ggplot() + geom_line(aes(x=Var2, y=mean_est)) +
-  geom_ribbon(aes(x=s, ymin=mean_est-CI90_est, ymax=mean_est+CI90_est), alpha=0.25)
+p2 <- as.data.frame(melted_cond_sim$data[2]) %>% ggplot() +
+  geom_line(aes(x=Var2, y=value, group=Var3, color=factor(Var3))) +
+  geom_line(aes(x=Var2, y=mean_est)) +
+  geom_ribbon(aes(x=Var2, ymin=mean_est-CI90_est, ymax=mean_est+CI90_est), alpha=0.25) +
+  xlab("s") + ylab("Relizations") +
+  labs(title=TeX(glue("$\\sigma_N^2 = {sigma_N[2]}$"))) +
+  theme(legend.position="none")
 
 p1 + p2
 ```
 
 
 ## f)
+Regular MC integral estimate of $\mathbb{E}(A)$:
+```{r 1f1}
+sim <- cond_sim[1, , ]
+sim_stats <- sim %>%
+  melt() %>%
+  group_by(Var2) %>%
+  summarise(A_hat=sum((value>2)*(value-2))) %>%
+  summarise(A_bar=mean(A_hat), sigma_hat=sd(A_hat))
+
+sim_stats
+```
+One can use simple kriging to calculate predictions at all values of $s$ based on our observation $\mathbf{y}$. The formula is as follows:
+$$
+\begin{align}
+  \hat{\mathbf{X}} &= \mathbf{a}^T\mathbf{Y} \\
+  \mathbf{a} &= \Sigma_{\mathbf{Y}}\mathrm{Cov}(\mathbf{Y}, \mathbf{X}) 
+\end{align}
+$$
+where both $\Sigma_{\mathbf{Y}}\in \mathbb{R}^{3\times3}$ and $\mathrm{Cov}(\mathbf{Y}, \mathbf{X}) \in \mathbb{R}^{50\times 3}$ can be retrieved from $\Sigma$.
+
+Simple 1D Kriging using the matern covariance function:
+```{r 1f2, seed=TRUE}
+y <- as.vector(mvrnorm(n=1, rep(0, 3), Sigma_bar)) # Draw of observed y with sigma_N = 0
+
+c_matrix <- Sigma[, 1:3] # Represents Cov(Y, X_0) for all X_0 in D
+a_matrix <- c_matrix %*% t(solve(Sigma_bar)) # Calculation of all a for the BLUP
+X_hat_kriging <- a_matrix %*% y
+```
+
+```{r 1f3}
+krig_stats <- X_hat_kriging %>%
+  melt()
+
+krig_stats
+```
+
+Firstly, $\hat{X}(s)$ is an unbiased predictor, so $\mathbb{E}(\hat{X}(s))=X(s)$. Furthermore, Jensen's inequality states that for a concave function $g: \mathbb{R} \rightarrow \mathbb{R}$
+$$
+g\left(\mathbb{E}(X)\right) \leq \mathbb{E}\left(g(X)\right)
+$$
+In this case, $g: \mathcal{L}^2 \rightarrow \mathcal{L}^2$ is given by
+$$
+g(x) = \sum_{s\in\tilde{\mathcal{D}}}{\mathbb{I}(x(s)>2)(x(s)-2)}
+$$
+where $\mathcal{L}^2$ is the hilbert space of random variables (in this case a random field indexed by $s$). $g$ is convex, but not strictly convex, i.e.
+$$
+\begin{align}
+  \tilde{A}=g\left(\mathbb{E}(X)\right) &\leq \mathbb{E}\left(g(X)\right)=\hat{A} \\
+  \implies \tilde{A} &\leq \hat{A}
+\end{align}
+$$
 
 ## g)
 
