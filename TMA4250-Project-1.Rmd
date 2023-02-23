@@ -33,6 +33,104 @@ library(latex2exp)
 # Problem 1
 
 ## a)
+Definition of positive semi-definite:
+$\forall m \geq 1$, $\forall a_1, \cdots, a_m \in \mathbb{R}$ and $\forall \mathbf{s}_1, \cdots, \mathbf{s}_m \in \mathcal{D}$:
+$$
+\begin{align}
+  \sum_{i=1}^m{\sum_{j=1}^m}{a_ia_jc(\mathbf{s_i}, \mathbf{s_j})}
+\end{align}
+$$
+The requirement for the correlation function to be positive semi-definite is necessary because it ensures that the covariance matrix formed from the correlation function is positive semi-definite. The covariance matrix is an important aspect of a stationary Gaussian random field, as it captures the covariance structure of the random field, which is essential for many statistical models that make use of the random field. A positive semi-definite covariance matrix ensures that the covariance between any two points in the field is always non-negative, and that the that the covariance matrix can always be factored into a lower triangular matrix multiplied by its transpose, which is useful for computation and interpretation.
+
+The powered exponential correlation function is given by
+$$
+\rho(h) = \exp{\left(-\frac{h}{a}\right)^\alpha}
+$$
+The Matern with smoothness $\nu$ is given by
+$$
+\rho(h) = \frac{2^{1-\nu}}{\Gamma(\nu)}\left( \frac{\sqrt{8\nu}h}{a} \right)^\nu K_\nu\left(\frac{\sqrt{8\nu}h}{a}  \right)
+$$
+The semi-variogram function is defined as
+$$
+\gamma(h) = \frac{1}{2}\mathrm{Var}\left[ X(h)-X(0) \right]
+$$
+Which in both cases is
+$$
+\gamma(h)= \sigma^2(1-\rho(h))
+$$
+
+```{r 1a1}
+h <- seq(0, 50, by=0.1)
+
+powered_exponential <- function(h, a, alpha) {
+  # Powered exponential correlation function as defined in lectures
+  return(
+    exp(-(h/a)^alpha)
+  )
+}
+
+matern_modified <- function(h, a, nu) {
+  # Matérn correlation function as defined in lectures (based on Matérn from geoR)
+  phi <- a/sqrt(8*nu)
+  return(
+    matern(h, phi, nu)
+  )
+}
+```
+
+Plotting:
+```{r 1a2}
+# Plot the functions
+plot(h, corr_funcexp1(h), type="l", lwd=2, col="red", xlab="h", ylab="ρ(h)")+title("Spatial correlation functions")
+lines(h, corr_funcexp2(h), lwd=2, col="blue")
+lines(h, corr_funcmatern1, type="l", lwd=2, col="green")
+lines(h, corr_funcmatern2, type="l", lwd=2, col="purple")
+
+legend("topright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "matern (ν=1, a=10)", "matern (ν=3, a=10)"),
+       col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
+
+#Variance= 1
+var1 = 1
+#Semi-variogram function for the Power Exponential with power alpha=1 and spatial scale a=10
+semivariogram_funcexp1 = var1*(1-powered_exponential(h, a=10, alpha=1))
+#Semi-variogram function for the Power Exponential with power alpha=1.9 and spatial scale a=10
+semivariogram_funcexp2 = var1*(1-powered_exponential(h, a=10, alpha=1))
+#Semi-variogram function for #matern with smoothness nu=1
+semivariogram_corr_funcmatern1 = var1*(1-matern_modified(h, a=20, nu=1))
+#Semi-variogram function for #matern with smoothness nu=3
+semivariogram_corr_funcmatern2 = var1*(1-matern_modified(h, a=20, nu=3))
+
+# Plot the semivariograms for varians= 1
+plot(h, semivariogram_funcexp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")+title("semi-variogram for var=1")
+lines(h, semivariogram_funcexp2, lwd=2, col="blue")
+lines(h, semivariogram_corr_funcmatern1, type="l", lwd=2, col="green")
+lines(h, semivariogram_corr_funcmatern2, type="l", lwd=2, col="purple")
+
+legend("bottomright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "matern (ν=1, a=10)", "matern (ν=3, a=10)"),
+       col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
+
+#Variance= 3
+var2 = 3
+#Semi-variogram function for the Power Exponential with power alpha=1 and spatial scale a=10
+semivariogram_exp1 = var2*(1-corr_funcexp1(h))
+#Semi-variogram function for the Power Exponential with power alpha=1.9 and spatial scale a=10
+semivariogram_exp2 = var2*(1-corr_funcexp2(h))
+#Semi-variogram function for #matern with smoothness nu=1
+semivariogram_corr_matern1 = var2*(1-corr_funcmatern1)
+#Semi-variogram function for #matern with smoothness nu=3
+semivariogram_corr_matern2 = var2*(1-corr_funcmatern2)
+
+# Plot the semivariograms for varians= 1
+plot(h, semivariogram_exp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")+title("semi-variogram for var=3")
+lines(h, semivariogram_exp2, lwd=2, col="blue")
+lines(h, semivariogram_corr_matern1, type="l", lwd=2, col="green")
+lines(h, semivariogram_corr_matern2, type="l", lwd=2, col="purple")
+
+legend("bottomright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "matern (ν=1, a=10)", "matern (ν=3, a=10)"),
+       col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
+```
+
+
 
 ## b)
 $X$ is a GRF, and therefore, by definition,
