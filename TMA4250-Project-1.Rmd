@@ -180,46 +180,52 @@ contour(interp_obj, add = TRUE, drawlabels = TRUE)
 
 ## a)
 ```{r 1b1}
-# Set the parameters
-n <- 30
-var <- 2
-a <- 3
+#Read the data from topo.dat file
+data <- read.table("/Users/olekristianskogly/Documents/Romlig stat/topo.dat", sep = " ", header = TRUE)
+ggplot (data, aes(x, y, color = z)) + geom_point()
 
-# Generate the grid
-x <- 1:n
-y <- 1:n
-grid <- expand.grid(x, y)
+# Interpolate the data
+interp_obj <- interp(data$x, data$y, data$z)
 
-# Compute the pairwise distances
-distances <- as.matrix(dist(grid))
-
-# Compute the covariance matrix
-C <- var * exp(-distances/a)
-
-# Draw one realization of the Gaussian Random Field
-X <- mvrnorm(n=1, mu=rep(0, n^2), Sigma=C)
-
-# Reshape X into a n x n matrix
-X <- matrix(X, ncol=n)
-
-# Melt the data into a data frame
-data_df <- melt(X)
+# Plot the interpolated data with color bar
+image.plot(interp_obj, main = "Interpolated Elevation", xlab = "x", ylab = "y")
 
 
-# Plot the Gaussian Random Field
-ggplot(data_df, aes(Var1, Var2, fill=value)) +
-  geom_tile() +
-  scale_fill_gradientn(colours = terrain.colors(100)) +
-  stat_contour(aes(z=value), color="black") +
-  ggtitle("One realization of GRF") +
-  xlab("X") +
-  ylab("Y") +
-  theme_classic()
+
+interp_obj <- interp(data$x, data$y, data$z)
+
+# Plot the heatmap
+image(interp_obj, xlab = "x", ylab = "y", col = colorRampPalette(c("blue", "white", "red"))(30), 
+      useRaster = TRUE)
+
+# Add a contour plot on top of the heatmap
+contour(interp_obj, add = TRUE, drawlabels = TRUE)
 ```
 ## b)
 
 ## c)
+```{r 1b1}
+# Convert the input data to a data frame
+data_frame <- as.data.frame(data)
 
+# Convert the data frame to a geodata object
+temp <- as.geodata(data_frame)
+
+# Create a regular grid of points to predict at
+grid <- expand.grid(1:315,1:315)
+
+# Use krige.conv to perform universal kriging and obtain predicted values
+# krige.control is used to specify the kriging parameters
+krigPred <- krige.conv(temp, locations = grid, krige = 
+                         krige.control(type.krige = "ok", trend.d = "2nd", trend.l = "2nd",
+                                       cov.pars = c(2500, 100), cov.model = "powered.exponential", kappa=1.5))
+
+# Extract the predicted values from the krige object
+prediction <- krigPred$predict
+
+# Display the predicted values as an image plot
+image.plot(interp(grid$Var1,grid$Var2,prediction))
+```
 ## d)
 
 ## e)
