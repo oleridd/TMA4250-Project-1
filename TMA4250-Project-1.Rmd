@@ -22,111 +22,13 @@ library(MASS)
 library(bessel)
 library(ggplot2)
 library(plotrix)
+library(viridis)
 ```
 
 # Problem 1
 
 ## a)
-```{r 1b1}
-alpha = c(1,1.9)
-a1 = 10
-h <- seq(0, 50, by=0.1)
-# Power Exponential with power alpha=1 and spatial scale a=10
-corr_funcexp1 <- function(h) {
-  exp(-(h/a1)^(alpha[1]))
-}
-
-# Power Exponential with power alpha=1.9 and spatial scale a=10
-corr_funcexp2 <- function(h) {
-  exp(-(h/a1)^(alpha[2]))
-}
-
-nu = c(1,3)
-a2 = 20
-
-Mattern <- function(h, nu, a2) {
-  (2^(1-nu) / gamma(nu)) * ((h*sqrt(8*nu))/a2)^nu * besselK(sqrt(8*nu)*h/a2, nu)
-}
-
-#Mattern with smoothness nu=1
-corr_funcmatern1 = Mattern(h, nu[1], a2)
-
-#Mattern with smoothness nu=3
-corr_funcmatern2 = Mattern(h, nu[2], a2)
-
-# Plot the functions
-plot(h, corr_funcexp1(h), type="l", lwd=2, col="red", xlab="h", ylab="ρ(h)")+title("Spatial correlation functions")
-lines(h, corr_funcexp2(h), lwd=2, col="blue")
-lines(h, corr_funcmatern1, type="l", lwd=2, col="green")
-lines(h, corr_funcmatern2, type="l", lwd=2, col="purple")
-
-legend("topright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "Mattern (ν=1, a=10)", "Mattern (ν=3, a=10)"),
-       col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
-
-#Variance= 1
-var1 = 1
-#Semi-variogram function for the Power Exponential with power alpha=1 and spatial scale a=10
-semivariogram_funcexp1 = var1*(1-corr_funcexp1(h))
-#Semi-variogram function for the Power Exponential with power alpha=1.9 and spatial scale a=10
-semivariogram_funcexp2 = var1*(1-corr_funcexp2(h))
-#Semi-variogram function for #Mattern with smoothness nu=1
-semivariogram_corr_funcmatern1 = var1*(1-corr_funcmatern1)
-#Semi-variogram function for #Mattern with smoothness nu=3
-semivariogram_corr_funcmatern2 = var1*(1-corr_funcmatern2)
-
-# Plot the semivariograms for varians= 1
-plot(h, semivariogram_funcexp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")+title("semi-variogram for var=1")
-lines(h, semivariogram_funcexp2, lwd=2, col="blue")
-lines(h, semivariogram_corr_funcmatern1, type="l", lwd=2, col="green")
-lines(h, semivariogram_corr_funcmatern2, type="l", lwd=2, col="purple")
-
-legend("bottomright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "Mattern (ν=1, a=10)", "Mattern (ν=3, a=10)"),
-       col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
-
-#Variance= 3
-var2 = 3
-#Semi-variogram function for the Power Exponential with power alpha=1 and spatial scale a=10
-semivariogram_exp1 = var2*(1-corr_funcexp1(h))
-#Semi-variogram function for the Power Exponential with power alpha=1.9 and spatial scale a=10
-semivariogram_exp2 = var2*(1-corr_funcexp2(h))
-#Semi-variogram function for #Mattern with smoothness nu=1
-semivariogram_corr_matern1 = var2*(1-corr_funcmatern1)
-#Semi-variogram function for #Mattern with smoothness nu=3
-semivariogram_corr_matern2 = var2*(1-corr_funcmatern2)
-
-# Plot the semivariograms for varians= 1
-plot(h, semivariogram_exp1, type="l", lwd=2, col="red", xlab="h", ylab="γ(h)")+title("semi-variogram for var=3")
-lines(h, semivariogram_exp2, lwd=2, col="blue")
-lines(h, semivariogram_corr_matern1, type="l", lwd=2, col="green")
-lines(h, semivariogram_corr_matern2, type="l", lwd=2, col="purple")
-
-legend("bottomright", c("Power Exponential (α=1, a=10)", "Power Exponential (α=1.9, a=10)", "Mattern (ν=1, a=10)", "Mattern (ν=3, a=10)"),
-       col=c("red", "blue", "green", "purple"), lwd=2, bg="white")
-
-```
 ## b)
-```{r 1b1}
-matern_modified <- function(h, nu, a) {
-  # Matern function as defined in lectures (based on matern from geoR)
-  phi <- a/sqrt(8*nu)
-  return(
-    matern(h, phi, nu)
-  )
-}
-
-s <- c(1:50)
-N <- 4
-nu <- 2
-a <- 10
-variance <- 2.5
-
-
-dist_matrix <- as.matrix(dist(s, diag=TRUE, upper=TRUE))
-mu <- rep(0, length(s))
-Sigma <- variance*matern_modified(dist_matrix, nu, a)
-
-x <- mvrnorm(n=N, mu, Sigma)
-```
 
 ## c)
 
@@ -166,42 +68,46 @@ contour(interp_obj, add = TRUE, drawlabels = TRUE)
 ```
 
 ## b)
+For the universal kriging predictor we need to find the best linear unbiased predictor(BLUP) of the underlying process at location $\vec{s_{0}} \in D$. We know from the lecture notes that when determine the BLUP for $\mathbf{X_{0}} = \mathbf{X}({s_{0}})$ at an unobserved location $\vec{s_{0}} \in D$, we need to determine $\vec{a} \in 	\mathbb{R}^{n}$ such that $\hat{\mathbf{X_{0}}} = \vec{a}^{T} \vec{\mathbf{X}}$ satisfies: 
 
-## c)
+\begin{enumerate}
 
-## d)
+\item $E[\hat{\mathbf{X_{0}}}] = E[\mathbf{X_{0}}]$.
 
-## e)
+ \item MSE = $E[(\mathbf{X_{0}} - \hat{\mathbf{X_{0}}})^{2}]$ is minimized. 
+ 
+\end{enumerate}
 
-## f)
+Starting by showing that the predictor is unbiased for an arbitrary location $\vec{s_{0}} \in D$: 
 
+\begin{equation}
+    E[\hat{\mathbf{X_{0}}}] = E[a^{T} \mathbf{X}] = a^{T} E[\mathbf{X}] = a^{T} \cdot g(s)^{T} \beta
+\end{equation}
 
-# Problem 3
+\begin{equation}
+    E[\mathbf{X_{0}}] = g(s_{0})^{T} \beta
+\end{equation}
 
-## a)
-```{r 1b1}
-#Read the data from topo.dat file
-data <- read.table("/Users/olekristianskogly/Documents/Romlig stat/topo.dat", sep = " ", header = TRUE)
-ggplot (data, aes(x, y, color = z)) + geom_point()
-
-# Interpolate the data
-interp_obj <- interp(data$x, data$y, data$z)
-
-# Plot the interpolated data with color bar
-image.plot(interp_obj, main = "Interpolated Elevation", xlab = "x", ylab = "y")
+when setting $E[\hat{\mathbf{X_{0}}}] = E[\mathbf{X_{0}}]$, we get $a^{T} g(s)^{T} = g(s_{0})^{T}$ since $\beta$ disappear from each side of the equation. Further we want to calculate the weights such that it satisfies the property for having a BLUP:
 
 
 
-interp_obj <- interp(data$x, data$y, data$z)
 
-# Plot the heatmap
-image(interp_obj, xlab = "x", ylab = "y", col = colorRampPalette(c("blue", "white", "red"))(30), 
-      useRaster = TRUE)
+\begin{multline}
+\centering
+    \hat{\alpha} &=\arg \max_{a}   (E[(\mathbf{X_{0}} - \hat{\mathbf{X_{0}}})^{2}]) &=\\
+     \arg \max_{a} \mathrm{Var}(\mathbf{X_{0}} - \hat{\mathbf{X_{0}}} ) &=\\
+     \arg \max_{a} (\mathrm{Cov}[\hat{\mathbf{X_{0}}} - \mathbf{X_{0}}, \hat{\mathbf{X_{0}}} - \mathbf{X_{0}} ]) &=\\
+    \arg \max_{a} (\mathrm{Cov}[a^{T}\mathbf{X} - \mathbf{X_{0}}, a^{T}\mathbf{X} - \mathbf{X_{0}}]) &= \\ 
+      \arg \max_{a} (\mathrm{Cov}[a^{T}\mathbf{X}, a^{T}\mathbf{X}]) + \mathrm{Cov}[\mathbf{X_{0}}, \mathbf{X_{0}}] -2\mathrm{Cov}[a^{T}\mathbf{X}, \mathbf{X_{0}}] &= \\ 
+      \arg \max_{a} (a^{T} \mathrm{Var}(\mathbf{X}) a + \mathrm{Var}(\mathbf{X_{0}}) -2a^{T} \mathrm{Cov}[\mathbf{X}, \mathbf{X_{0}}]) &= \\ 
+      \arg \max_{a}(a^{T} \sigma^{2} \Sigma_{\rho} a + \sigma^{2}-2a^{T}\sigma^{2}\rho_{0})
+\end{multline}
 
-# Add a contour plot on top of the heatmap
-contour(interp_obj, add = TRUE, drawlabels = TRUE)
-```
-## b)
+constrained by $a^{T} g(s)^{T} = g(s_{0})^{T}$ where $\Sigma_{\rho} = \frac{\mathrm{Var}(\mathbf{X})}{\sigma}^{2}$ and $\rho_{0} = \mathrm{corr(\mathbf{X}, \mathbf{X_{0}})}$ .
+
+
+
 
 ## c)
 ```{r 1b1}
@@ -216,18 +122,324 @@ grid <- expand.grid(1:315,1:315)
 
 # Use krige.conv to perform universal kriging and obtain predicted values
 # krige.control is used to specify the kriging parameters
-krigPred <- krige.conv(temp, locations = grid, krige = 
-                         krige.control(type.krige = "ok", trend.d = "2nd", trend.l = "2nd",
+ordkrigPred <- krige.conv(temp, locations = grid, krige = 
+                         krige.control(type.krige = "ok", 
                                        cov.pars = c(2500, 100), cov.model = "powered.exponential", kappa=1.5))
 
 # Extract the predicted values from the krige object
-prediction <- krigPred$predict
+prediction_ok <- ordkrigPred$predict
 
 # Display the predicted values as an image plot
-image.plot(interp(grid$Var1,grid$Var2,prediction))
+image.plot(interp(grid$Var1,grid$Var2,prediction_ok))
+
 ```
 ## d)
+```{r 1b1}
+# Specify expectation function and covariance model
+univkrigPred <- krige.conv(temp, locations = grid, krige = 
+                         krige.control(type.krige = "ok", 
+                                       trend.d = "2nd", trend.l = "2nd",
+                                       cov.model = "powered.exponential", 
+                                       cov.pars = c(2500, 100), kappa = 1.5))
+
+# Calculate universal Kriging predictor and associated prediction variance
+prediction_uk <- univkrigPred$predict
+variance <- univkrigPred$krige.var
+
+# Display results
+image.plot(interp(grid$Var1, grid$Var2, prediction_uk))
+```
 
 ## e)
+```{r 1b1}
+# Find the index of the location s0 in the grid
+s0 <- c(100, 100)
+index <- which(grid$Var1 == s0[1] & grid$Var2 == s0[2])
+
+# Calculate the probability for the elevation to be higher than 850 m
+prob_higher <- 1 - pnorm(850, mean = prediction_ok[index], sd = sqrt(ordkrigPred$krige.var[index]))
+cat("Probability that the elevation is higher than 850 m:", prob_higher, "\n")
+
+# Calculate the elevation for which it is 0.90 probability that the true elevation is below it
+quantile <- qnorm(0.9, mean = prediction_ok[index], sd = sqrt(ordkrigPred$krige.var[index]))
+cat("Elevation for which it is 0.90 probability that the true elevation is below it:", quantile, "\n")
+
+
+```
+## f)
+
+
+# Problem 3
+
+## a)
+```{r 1b1}
+# Set the parameters
+n <- 30
+var <- 2
+a <- 3
+
+# Generate the grid
+x <- 1:n
+y <- 1:n
+grid <- expand.grid(x, y)
+
+# Compute the pairwise distances
+distances <- as.matrix(dist(grid))
+
+# Compute the covariance matrix
+C <- var * exp(-distances/a)
+
+# Draw one realization of the Gaussian Random Field
+X <- mvrnorm(n=1, mu=rep(0, n^2), Sigma=C)
+
+
+# Reshape X into a n x n matrix
+X <- matrix(X, ncol=n)
+
+# Melt the data into a data frame
+data_df <- melt(X)
+
+
+# Plot the Gaussian Random Field
+ggplot(data_df, aes(Var1, Var2, fill=value)) +
+  geom_tile() +
+  scale_fill_gradientn(colours = terrain.colors(100)) +
+  stat_contour(aes(z=value), color="black") +
+  ggtitle("One realization of GRF") +
+  xlab("X") +
+  ylab("Y") +
+  theme_classic()
+```
+## b)
+```{r 1b1}
+# define a semi-variogram function
+semi_variogram <- function(var, distances, a) {
+  return(var * (1 - exp(-distances/a)))
+}
+
+# Create a SpatialPointsDataFrame object
+coords <- expand.grid(x, y)
+values <- as.vector(X)
+data_sp <- SpatialPointsDataFrame(coords, data.frame(values))
+
+# Compute the empirical variogram
+emp_variogram <- variog(coords = data_sp@coords, data = data_sp@data$values)
+# Compute the theoretical variogram using the semi_variogram function
+dVec = seq(0, 40, length.out = 200)
+theo_variogram <- semi_variogram(var, dVec, a)
+
+# Plot the true and empirical variograms together
+plot(emp_variogram, pch = 16, col = "blue", main = "True and Empirical Semi-variograms", xlab = "Distance", ylab = "Semi-variance", ylim=c(0,3))
+lines(dVec, theo_variogram, col = "red", ylim=c(0,3))
+legend("bottomright", legend = c("True semi-variogram", "Empirical semi-variogram"), col = c("red", "blue"), lty = 1)
+
+```
+
+## c)
+```{r 1b1}
+#Repeat problem a) and b) three times. Making for-loop for doing it
+
+# Define the number of repetitions
+n_repetitions <- 3
+
+
+# Loop through the repetitions
+for (i in 1:n_repetitions) {
+  # Generate the grid
+  x <- 1:n
+  y <- 1:n
+  grid <- expand.grid(x, y)
+  
+  # Compute the pairwise distances
+  distances <- as.matrix(dist(grid))
+  
+  # Compute the covariance matrix
+  C <- var * exp(-distances/a)
+  
+  # Draw one realization of the Gaussian Random Field
+  X <- mvrnorm(n=1, mu=rep(0, n^2), Sigma=C)
+  
+  # Reshape X into a n x n matrix
+  X <- matrix(X, ncol=n)
+  
+  # Melt the data into a data frame
+  data_df <- melt(X)
+  
+  # Plot the Gaussian Random Field
+  plot_GRF <- ggplot(data_df, aes(Var1, Var2, fill=value)) +
+    geom_tile() +
+    scale_fill_gradientn(colours = terrain.colors(100)) +
+    stat_contour(aes(z=value), color="black") +
+    ggtitle(paste0("One realization of GRF, repetition ", i)) +
+    xlab("X") +
+    ylab("Y") +
+    theme_classic()
+  
+  # Print the plot object
+  print(plot_GRF)
+  
+  # Create a SpatialPointsDataFrame object
+  coords <- expand.grid(x, y)
+  values <- as.vector(X)
+  data_sp <- SpatialPointsDataFrame(coords, data.frame(values))
+  
+  # Compute the empirical variogram
+  emp_variogram <- variog(coords = data_sp@coords, data = data_sp@data$values)
+  
+  # Compute the theoretical variogram using the semi_variogram function
+  dVec = seq(0, 40, length.out = 200)
+  theo_variogram <- semi_variogram(var, dVec, a)
+  
+  # Plot the true and empirical variograms together
+  plot(emp_variogram, pch = 16, col = "blue", main = paste0("True and Empirical Semi-variograms, repetition ", i), xlab = "Distance", ylab = "Semi-variance")
+  lines(dVec, theo_variogram, col = "red")
+  legend("bottomright", legend = c("True semi-variogram", "Empirical semi-variogram"), col = c("red", "blue"), lty = 1)
+}
+```
+## d)
+```{r 1b1}
+set.seed(123) 
+# Select 36 locations uniformly at random
+sampled_points <- sample.int(n^2, 36, replace = FALSE)
+x_sampled <- grid[sampled_points,1]
+y_sampled <- grid[sampled_points,2]
+sampled_coords <- cbind(x_sampled, y_sampled)
+
+# Get the exact observations at the sampled locations
+exact_obs <- X[sampled_points]
+
+# Create a SpatialPointsDataFrame object
+data_sp <- SpatialPointsDataFrame(sampled_coords, data.frame(exact_obs))
+data_sp@data$values <- data_sp$exact_obs
+
+
+# Compute the empirical variogram
+emp_variogram <- variog(coords = data_sp@coords, data = data_sp@data$values)
+
+# Compute the theoretical variogram using the semi_variogram function
+dVec = seq(0, 40, length.out = 200)
+theo_variogram <- semi_variogram(var,dVec , a)
+
+# Plot the true and empirical variograms together
+plot(emp_variogram, pch = 16, col = "blue", main = "True and Empirical Semi-variograms", xlab = "Distance", ylab = "Semi-variance", ylim =c(0,3))
+lines(dVec, theo_variogram, col = "red")
+legend("topright", legend = c("True semi-variogram", "Empirical semi-variogram"), col = c("red", "blue"), lty = 1)
+
+##
+initial_values = c(1, 1)
+fit_full <- likfit(coords = coords, data = X, ini.cov.pars = initial_values, cov.model = "exponential", fix.nugget = TRUE)
+fit_obs = likfit(coords=as.matrix(data_sp@coords), data = data_sp@data$values ,
+                 ini.cov.pars=initial_values, cov.model="exponential",
+                 fix.nugget=TRUE)
+print(fit_full$cov.pars)
+print(fit_obs$cov.pars)
+
+est_variogram_full <- semi_variogram(fit_full$cov.pars[1], dVec, fit_full$cov.pars[2])
+est_variogram_obs <- semi_variogram(fit_obs$cov.pars[1], dVec, fit_obs$cov.pars[2])
+
+#plot estimated and true semi-variogram for all locations
+plot(est_variogram_full, pch = 16, col = "blue", main = "True and Estimated Semi-variograms for all locations on D", xlab = "Distance", ylab = "Semi-variance", ylim=c(0, 3), xlim = c(0,40))
+lines(dVec, theo_variogram, col = "red")
+legend("topright", legend = c("True semi-variogram", "Estimated semi-variogram"), col = c("red", "blue"), lty = 1)
+
+#plot estimated and true semi-variogram for the 36 locations
+plot(est_variogram_obs, pch = 16, col = "blue", main = "True and Estimated Semi-variograms for 36 locations", xlab = "Distance", ylab = "Semi-variance", ylim=c(0, 3), xlim = c(0,40))
+lines(dVec, theo_variogram, col = "red")
+legend("topright", legend = c("True semi-variogram", "Estimated semi-variogram"), col = c("red", "blue"), lty = 1)
+
+
+```
+
+
+## e)
+```{r 1b1}
+#Starting with case where we have 9 locations
+set.seed(123) 
+# Select 9 locations uniformly at random
+sampled_points9 <- sample.int(n^2, 9, replace = FALSE)
+x_sampled9 <- grid[sampled_points9,1]
+y_sampled9 <- grid[sampled_points9,2]
+sampled_coords9 <- cbind(x_sampled9, y_sampled9)
+# Get the exact observations at the sampled locations
+exact_obs9 <- X[sampled_points9]
+
+# Create a SpatialPointsDataFrame object for 9 locations
+data_sp9 <- SpatialPointsDataFrame(sampled_coords9, data.frame(exact_obs9))
+data_sp9@data$values <- data_sp9@data$exact_obs9
+
+
+#Creating 64 random locations
+set.seed(123) 
+# Select 64 locations uniformly at random
+sampled_points64 <- sample.int(n^2, 64, replace = FALSE)
+x_sampled64 <- grid[sampled_points64,1]
+y_sampled64 <- grid[sampled_points64,2]
+sampled_coords64 <- cbind(x_sampled64, y_sampled64)
+# Get the exact observations at the sampled locations
+exact_obs64 <- X[sampled_points64]
+
+#Creating 100 random locations
+set.seed(123) 
+# Select 64 locations uniformly at random
+sampled_points100 <- sample.int(n^2, 100, replace = FALSE)
+x_sampled100 <- grid[sampled_points100,1]
+y_sampled100 <- grid[sampled_points100,2]
+sampled_coords100 <- cbind(x_sampled100, y_sampled100)
+# Get the exact observations at the sampled locations
+exact_obs100 <- X[sampled_points100]
+
+
+# Create a SpatialPointsDataFrame object for 9 locations
+data_sp9 <- SpatialPointsDataFrame(sampled_coords9, data.frame(exact_obs9))
+data_sp9@data$values <- data_sp9$exact_obs9
+
+# Create a SpatialPointsDataFrame object for 64 locations
+data_sp64 <- SpatialPointsDataFrame(sampled_coords64, data.frame(exact_obs64))
+data_sp64@data$values <- exact_obs64
+
+# Create a SpatialPointsDataFrame object for 100 locations
+data_sp100 <- SpatialPointsDataFrame(sampled_coords100, data.frame(exact_obs100))
+data_sp100@data$values <- exact_obs100
+
+initial_values = c(1, 1)
+fit_obs9 = likfit(coords=as.matrix(data_sp9@coords), data = data_sp9@data$values ,
+                 ini.cov.pars=initial_values, cov.model="exponential",
+                 fix.nugget=TRUE)
+fit_obs64 = likfit(coords=as.matrix(data_sp64@coords), data = data_sp64@data$values ,
+                  ini.cov.pars=initial_values, cov.model="exponential",
+                  fix.nugget=TRUE)
+fit_obs100 = likfit(coords=as.matrix(data_sp100@coords), data = data_sp100@data$values ,
+                   ini.cov.pars=initial_values, cov.model="exponential",
+                   fix.nugget=TRUE)
+
+print(fit_obs9$cov.pars)
+print(fit_obs64$cov.pars)
+print(fit_obs100$cov.pars)
+
+#making the estimated semi-variograms for the cases with 9, 64 and 100 locations
+est_variogram_obs9 <- semi_variogram(fit_obs9$cov.pars[1], dVec, fit_obs9$cov.pars[2])
+est_variogram_obs64 <- semi_variogram(fit_obs64$cov.pars[1], dVec, fit_obs64$cov.pars[2])
+est_variogram_obs100 <- semi_variogram(fit_obs100$cov.pars[1], dVec, fit_obs100$cov.pars[2])
+
+#plot estimated and true semi-variogram for the 9 locations
+plot(est_variogram_obs9, pch = 16, col = "blue", main = "True and Estimated Semi-variograms for 9 locations", xlab = "Distance", ylab = "Semi-variance", ylim=c(0, 3), xlim = c(0,40))
+lines(dVec, theo_variogram, col = "red")
+legend("topright", legend = c("True semi-variogram", "Estimated semi-variogram"), col = c("red", "blue"), lty = 1)
+
+#plot estimated and true semi-variogram for the 64 locations
+plot(est_variogram_obs64, pch = 16, col = "blue", main = "True and Estimated Semi-variograms for 64 locations", xlab = "Distance", ylab = "Semi-variance", ylim=c(0, 3), xlim = c(0,40))
+lines(dVec, theo_variogram, col = "red")
+legend("topright", legend = c("True semi-variogram", "Estimated semi-variogram"), col = c("red", "blue"), lty = 1)
+
+#plot estimated and true semi-variogram for the 100 locations
+plot(est_variogram_obs100, pch = 16, col = "blue", main = "True and Estimated Semi-variograms for 100 locations", xlab = "Distance", ylab = "Semi-variance", ylim=c(0, 3), xlim = c(0,40))
+lines(dVec, theo_variogram, col = "red")
+legend("topright", legend = c("True semi-variogram", "Estimated semi-variogram"), col = c("red", "blue"), lty = 1)
+
+
+
+
+
+```
 
 ## f)
