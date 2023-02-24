@@ -435,6 +435,8 @@ image(interp_obj, xlab = "x", ylab = "y", col = colorRampPalette(c("blue", "whit
 # Add a contour plot on top of the heatmap
 contour(interp_obj, add = TRUE, drawlabels = TRUE)
 ```
+The mean is changing with the refference point $x_{0}$, so a stationary GRF is not a suitable model for
+the terrain elevation in domain D. 
 
 ## b)
 For the universal kriging predictor we need to find the best linear unbiased predictor(BLUP) of the underlying process at location $\vec{s_{0}} \in D$. We know from the lecture notes that when determine the BLUP for $\mathbf{X_{0}} = \mathbf{X}({s_{0}})$ at an unobserved location $\vec{s_{0}} \in D$, we need to determine $\vec{a} \in 	\mathbb{R}^{n}$ such that $\hat{\mathbf{X_{0}}} = \vec{a}^{T} \vec{\mathbf{X}}$ satisfies: 
@@ -502,6 +504,7 @@ prediction_ok <- ordkrigPred$predict
 image.plot(interp(grid$Var1,grid$Var2,prediction_ok))
 
 ```
+The image plot shows a predicted surface of terrain elevation based on the ordinary kriging model, and there are areas of high and low elevation with gradual changes in between.
 ## d)
 ```{r}
 # Specify expectation function and covariance model
@@ -518,7 +521,7 @@ variance <- univkrigPred$krige.var
 # Display results
 image.plot(interp(grid$Var1, grid$Var2, prediction_uk))
 ```
-
+The resulting image plot of the universal Kriging predictor shows a smoothed surface that appears to capture the general trend of the terrain elevation.
 ## e)
 ```{r}
 # Find the index of the location s0 in the grid
@@ -537,7 +540,7 @@ cat("Elevation for which it is 0.90 probability that the true elevation is below
 ```
 
 ## f)
-
+By evaluating the real data, we can see that the field achived using the kriging predictor is close to the field we got by using the interpolation of the observated data. 
 
 # Problem 3
 
@@ -603,7 +606,7 @@ lines(dVec, theo_variogram, col = "red", ylim=c(0,3))
 legend("bottomright", legend = c("True semi-variogram", "Empirical semi-variogram"), col = c("red", "blue"), lty = 1)
 
 ```
-
+The empirical semi-variogram estimate appears to be a reasonable approximation of the true semi-variogram function, although with some uncertainty.
 ## c)
 ```{r}
 #Repeat problem a) and b) three times. Making for-loop for doing it
@@ -665,6 +668,7 @@ for (i in 1:n_repetitions) {
   legend("bottomright", legend = c("True semi-variogram", "Empirical semi-variogram"), col = c("red", "blue"), lty = 1)
 }
 ```
+The results of repeating the simulations show that the Gaussian random field and empirical semi-variograms vary not so much between the realizations.
 ## d)
 ```{r}
 set.seed(123) 
@@ -718,7 +722,7 @@ legend("topright", legend = c("True semi-variogram", "Estimated semi-variogram")
 
 
 ```
-
+The estimated semi-variogram based on 36 sampled locations provides a reasonable approximation of the true semi-variogram, while the estimated semi-variogram based on all locations in the grid provides a better fit to the true semi-variogram.
 
 ## e)
 ```{r}
@@ -806,6 +810,7 @@ lines(dVec, theo_variogram, col = "red")
 legend("topright", legend = c("True semi-variogram", "Estimated semi-variogram"), col = c("red", "blue"), lty = 1)
 
 ```
-
+As the number of randomly selected locations increases, the estimated semi-variograms become smoother and closer to the true semi-variogram.
 
 ## f)
+We can see that increasing the number of locations gives a better estimate of the semi-variogram compared to the true semi-variogram. We can from the plots see that it is a benefit to use estimated parameters to estimate semi-variograms rather than use empirical semi-variograms. 
