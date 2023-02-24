@@ -7,49 +7,40 @@ output: html_document
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 
-<<<<<<< HEAD
-=======
-```{r setup, include=FALSE, echo=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-
->>>>>>> OKS
 # install.packages("geoR")
 # install.packages("akima")
 # install.packages("fields")
 # install.packages("ggplot2")
 # install.packages("MASS")
-<<<<<<< HEAD
 # install.packages("reshape2")
 # install.packages("patchwork")
 # install.packages("glue")
 # install.packages("tidyverse")
 # install.packages("latex2exp")
-=======
->>>>>>> OKS
+# install.packages("Bessel")
+
 
 library(geoR)
 library(akima)
 library(fields)
 library(ggplot2)
 library(MASS)
-<<<<<<< HEAD
 library(reshape2)
 library(patchwork)
 library(glue)
 library(tidyverse)
 library(latex2exp)
-=======
-library(bessel)
+library(Bessel)
 library(ggplot2)
 library(plotrix)
 library(viridis)
->>>>>>> OKS
+library(sp)
 ```
 
 # Problem 1
 
 ## a)
-<<<<<<< HEAD
+
 Definition of positive semi-definite:
 $\forall m \geq 1$, $\forall a_1, \cdots, a_m \in \mathbb{R}$ and $\forall \mathbf{s}_1, \cdots, \mathbf{s}_m \in \mathcal{D}$:
 $$
@@ -418,36 +409,13 @@ This is very clearly apparent in the simulations above, in which the Kriging est
 ## g)
 For the exponential and the Matérn covariance functions, the plots in task b clearly present a larger "long-scale" variance with changing $\sigma^2$, and a larger smoothness with changing hyperparameters $\alpha$ and $\nu$ respectively. A conditional model is in both cases relatively easy to achieve using basic multivariate Gaussian conditional distributions, as was presented in d) and e). Finally, we studied two different methods for estimating parameters of the distribution, one empirical and one using the BLUP (best linear unbiased predictor), a.k.a. simple Kriging. Unfortunately, the latter method did not yield interesting results.
 
-# Problem 2
-
-## a)
-
-## b)
-
-## c)
-
-## d)
-
-=======
-## b)
-
-## c)
-
-## d)
-
-## e)
-
-## f)
-
-## g)
-
 
 # Problem 2
 
 ## a)
-```{r 1b1}
+```{r}
 #Read the data from topo.dat file
-data <- read.table("/Users/olekristianskogly/Documents/Romlig stat/topo.dat", sep = " ", header = TRUE)
+data <- read.table("C:/Users/oleri/OneDrive - NTNU/Sem08/TMA4250/TMA4250-Project-1/topo.dat", sep = " ", header = TRUE)
 ggplot (data, aes(x, y, color = z)) + geom_point()
 
 # Interpolate the data
@@ -511,7 +479,7 @@ constrained by $a^{T} g(s)^{T} = g(s_{0})^{T}$ where $\Sigma_{\rho} = \frac{\mat
 
 
 ## c)
-```{r 1b1}
+```{r}
 # Convert the input data to a data frame
 data_frame <- as.data.frame(data)
 
@@ -535,7 +503,7 @@ image.plot(interp(grid$Var1,grid$Var2,prediction_ok))
 
 ```
 ## d)
-```{r 1b1}
+```{r}
 # Specify expectation function and covariance model
 univkrigPred <- krige.conv(temp, locations = grid, krige = 
                          krige.control(type.krige = "ok", 
@@ -552,7 +520,7 @@ image.plot(interp(grid$Var1, grid$Var2, prediction_uk))
 ```
 
 ## e)
-```{r 1b1}
+```{r}
 # Find the index of the location s0 in the grid
 s0 <- c(100, 100)
 index <- which(grid$Var1 == s0[1] & grid$Var2 == s0[2])
@@ -567,24 +535,14 @@ cat("Elevation for which it is 0.90 probability that the true elevation is below
 
 
 ```
->>>>>>> OKS
+
 ## f)
 
 
 # Problem 3
 
 ## a)
-<<<<<<< HEAD
-
-## b)
-
-## c)
-
-## d)
-
-## e)
-=======
-```{r 1b1}
+```{r}
 # Set the parameters
 n <- 30
 var <- 2
@@ -623,7 +581,7 @@ ggplot(data_df, aes(Var1, Var2, fill=value)) +
   theme_classic()
 ```
 ## b)
-```{r 1b1}
+```{r}
 # define a semi-variogram function
 semi_variogram <- function(var, distances, a) {
   return(var * (1 - exp(-distances/a)))
@@ -633,7 +591,6 @@ semi_variogram <- function(var, distances, a) {
 coords <- expand.grid(x, y)
 values <- as.vector(X)
 data_sp <- SpatialPointsDataFrame(coords, data.frame(values))
-
 # Compute the empirical variogram
 emp_variogram <- variog(coords = data_sp@coords, data = data_sp@data$values)
 # Compute the theoretical variogram using the semi_variogram function
@@ -648,7 +605,7 @@ legend("bottomright", legend = c("True semi-variogram", "Empirical semi-variogra
 ```
 
 ## c)
-```{r 1b1}
+```{r}
 #Repeat problem a) and b) three times. Making for-loop for doing it
 
 # Define the number of repetitions
@@ -709,7 +666,7 @@ for (i in 1:n_repetitions) {
 }
 ```
 ## d)
-```{r 1b1}
+```{r}
 set.seed(123) 
 # Select 36 locations uniformly at random
 sampled_points <- sample.int(n^2, 36, replace = FALSE)
@@ -764,7 +721,7 @@ legend("topright", legend = c("True semi-variogram", "Estimated semi-variogram")
 
 
 ## e)
-```{r 1b1}
+```{r}
 #Starting with case where we have 9 locations
 set.seed(123) 
 # Select 9 locations uniformly at random
@@ -848,11 +805,7 @@ plot(est_variogram_obs100, pch = 16, col = "blue", main = "True and Estimated Se
 lines(dVec, theo_variogram, col = "red")
 legend("topright", legend = c("True semi-variogram", "Estimated semi-variogram"), col = c("red", "blue"), lty = 1)
 
-
-
-
-
 ```
->>>>>>> OKS
+
 
 ## f)
